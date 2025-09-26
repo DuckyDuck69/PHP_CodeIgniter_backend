@@ -1,0 +1,26 @@
+{
+    "name": "phant/training_migrate",
+    "autoload": {
+        "psr-4": {
+            "Phant\\TrainingMigrate\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Duc Phan",
+            "email": "phanthaihoangduc99@gmail.com"
+        }
+    ],
+    "require": {
+        "phpmailer/phpmailer": "^6.10",
+        "monolog/monolog": "1.26",
+        "pda/pheanstalk": "^3.2",
+        "mongodb/mongodb": "^1.4",
+        "vlucas/phpdotenv": "2.6"
+    },
+    "config": {
+        "platform": {
+            "php": "5.6.40"
+        }
+    }
+}
