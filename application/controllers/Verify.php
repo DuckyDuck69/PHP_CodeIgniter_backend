@@ -59,11 +59,22 @@ class Verify extends CI_Controller {
             $attachment = [];
             $subject = 'ST Group: Gui Tep ';
             $pdf_url = site_url('track').'/pdf?id=' . $id;
-            $body = 'Xin chào '.$user_name
-                        .'<br><br>Đây là tệp đính kèm của bạn: ' 
-                        .'<a href="'.$pdf_url.'">Tải pdf của bạn</a>'
-                        .'<br><br> Trân trọng 
-                        '.'<br> ST Group';
+            $body = '
+                <div style="font-family: Arial, Helvetica, sans-serif; color:#333; line-height:1.6;">
+                    <p>🎬 Xin chào <strong>'.$user_name.'</strong>,</p>
+
+                    <p>Đây là tệp đính kèm của bạn:<br>
+                    <a href="'.$pdf_url.'" 
+                    style="display:inline-block; margin-top:8px; padding:10px 16px; 
+                            background:#9b4d97; color:#fff; text-decoration:none; 
+                            border-radius:6px; font-weight:bold;">
+                    ⬇️ Tải PDF của bạn
+                    </a>
+                    </p>
+
+                    <p style="margin-top:20px;">Trân trọng,<br><strong>ST Group</strong></p>
+                </div>
+            ';
             $payload = [
                 'to_email'    => $user_email,
                 'to_name'     => $user_name,

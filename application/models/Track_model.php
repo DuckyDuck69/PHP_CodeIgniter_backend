@@ -7,6 +7,7 @@ class Track_model extends CI_Model{
     private $collection;
     public function __construct(){
         parent::__construct();
+        $this->load->helper("time_convert");
         $client = new Client("mongodb://localhost:27017");
         $this->collection =  $client->php_db->selectCollection('user');
     }
@@ -14,8 +15,8 @@ class Track_model extends CI_Model{
         $result = $this->collection->updateOne(['_id' => new ObjectId($id), 
                                                 'engagement.email_open.opened' => ['$ne' => true]  ], //only update if opened is false
                                     ['$set' => ['engagement.email_open.opened' => true, 
-                                                        'engagement.email_open.first_opened_at' => new UTCDateTime(),
-                                                        'audit.updated_at' => new UTCDateTime()]]);
+                                                        'engagement.email_open.first_opened_at' => convert_time(new UTCDateTime()),
+                                                        'audit.updated_at' => convert_time(new UTCDateTime())]]);
         return $result->getModifiedCount() > 0;
     }
 
@@ -25,8 +26,8 @@ class Track_model extends CI_Model{
             [
                 '$set' => [
                     'engagement.pdf_click.clicked'    => true,
-                    'engagement.pdf_click.first_clicked_at' => new UTCDateTime(),
-                    'audit.updated_at' => new UTCDateTime()
+                    'engagement.pdf_click.first_clicked_at' => convert_time(new UTCDateTime()),
+                    'audit.updated_at' => convert_time(new UTCDateTime())
                 ]
             ]
         );
@@ -38,8 +39,8 @@ class Track_model extends CI_Model{
                     [
                         '$set' => [
                             'engagement.email_open.verify'    => true,
-                            'engagement.email_open.verify_opened_time' => new UTCDateTime(),
-                            'audit.updated_at' => new UTCDateTime()
+                            'engagement.email_open.verify_opened_time' =>convert_time(new UTCDateTime()),
+                            'audit.updated_at' => convert_time(new UTCDateTime())
                         ]
                     ]
                 );
@@ -51,8 +52,8 @@ class Track_model extends CI_Model{
                     [
                         '$set' => [
                             'engagement.email_open.pdf'    => true,
-                            'engagement.email_open.pdf_opened_time' => new UTCDateTime(),
-                            'audit.updated_at' => new UTCDateTime()
+                            'engagement.email_open.pdf_opened_time' => convert_time(new UTCDateTime()),
+                            'audit.updated_at' => convert_time(new UTCDateTime())
                         ]
                     ]
                 );

@@ -32,7 +32,6 @@ class Image_tracking extends CI_Controller{
         imagefill($im, 0, 0, $trans_colour);
         imagegif($im);
         imagedestroy($im);
-
     }
 
 }

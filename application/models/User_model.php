@@ -1,6 +1,7 @@
 <?php
 use MongoDB\Client;
 use MongoDB\BSON\UTCDateTime;
+use MongoDB\BSON\ObjectId;
 class User_model extends CI_Model {
     private $collection;
     public function __construct() {
@@ -67,7 +68,16 @@ class User_model extends CI_Model {
         return $user_id;
     }
 
-    
+    public function get_user($id) {
+        try {
+            $oid = new ObjectId($id);
+        } catch (\Exception $e) {
+            log_message('error', 'Invalid ObjectId: '.$id);
+            return null;
+        }
+        return $this->collection->findOne(['_id' => $oid]) ?: null;
+    }
+
     public function retrieve_user(array $filter = []){
         //Tell the driver to return PHP type document and array
         $opts = [

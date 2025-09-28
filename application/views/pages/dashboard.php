@@ -9,6 +9,10 @@
         <script src="https://kendo.cdn.telerik.com/2021.3.914/js/kendo.all.min.js"></script>
     </head>
     <style>
+        .k-grid-header .k-header {
+            white-space: normal !important;
+            text-overflow: clip !important;
+        }
         #title{
             text-align: center;
         }
@@ -30,19 +34,14 @@
         <br>
         <br>
         <div id="logout">
-            <form action="<?= site_url("dashboard_filter") ?>" method="POST">
-                <label for="selection">Filter Choice </label>
-                <?php $active = isset($active_filter) ? $active_filter : 'none'; ?>
-                <select name="selectedOption" id="selection">
-                    <!-- Make the dropdowns remember their picked filter option -->
-                    <option value="none"             <?= $active==='none' ? 'selected' : '' ?>>None</option>
-                    <option value="email_verified"   <?= $active==='email_verified' ? 'selected' : '' ?>>Đã xác nhận email</option>
-                    <option value="email_not_verified" <?= $active==='email_not_verified' ? 'selected' : '' ?>>Chưa xác nhận email</option>
-                    <option value="pdf_clicked"      <?= $active==='pdf_clicked' ? 'selected' : '' ?>>Đã tải tài liệu</option>
-                    <option value="pdf_not_clicked"  <?= $active==='pdf_not_clicked' ? 'selected' : '' ?>>Chưa tải tài liệu</option>
-                </select>
-                <br><br>
-                <input type="submit" value="Filter">
+            <form  id="send-reminder" action="<?= site_url("admin/send_reminder") ?>" method="POST">
+                <label for="selection">Chọn loại email</label>
+                    <select id="selection" name="selection">
+                        <option value="verify">Thư xác nhận</option>
+                        <option value="file">Thư tài liệu</option>
+                    </select>
+                <input type="hidden" id="filter" name="filtered_user">
+                <button type="submit">Send Reminder</button>
             </form>
 
             <form action="<?= site_url('home_page')?>">
@@ -51,74 +50,81 @@
         </div>
         <br>
         <br>
-
-        <!-- A form to send email only if we filter the table by users who haven't sent email or  received pdf -->
-        <?php if (in_array($active, ['email_not_verified','pdf_not_clicked'], true)): ?>
-        <form action="<?= site_url('admin/send_reminder') ?>" method="POST" style="" id="send-reminder">
-            <input type="hidden" name="filter" value="<?= htmlspecialchars($active, ENT_QUOTES, 'UTF-8') ?>">
-            <button style="background-color:yellow" type="submit" id="queryBtn"><?= $active == 'email_not_verified' ? 'Gửi lại email' : 'Gửi lại tài liệu' ?></button>
-        </form>
-        <?php endif; ?>
         <br>
         <br>
-        <table id="grid" border="1" cellspacing="0" cellpadding="6">
-            <caption></caption>
-            <thead>
-                <tr>
-                <th>User ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Age</th>
-                <th>Job</th>
-                <th>Location (long, lat)</th>
-                <th>Email Verified</th>
-                <th>File Clicked</th>
-                <th>Verify opened</th>
-                <th>Created at</th>
-                </tr>   
-            </thead>
-            <tbody id ="rows">
-
-                <?php foreach($user as $u): ?>
-                    <?php 
-                        //Convert coor array to string
-                        $coords = isset($u['location']['coords']['coordinates']) ? $u['location']['coords']['coordinates'] : null;
-                        if ($coords !== null) {
-                            $long = isset($coords[1]) ? $coords[1]: '';
-                            $lat  = isset($coords[0]) ? $coords[0]: '';
-                            $loc = $lat !== '' && $long !== '' ? $lat . ', ' . $long : 'not enough coor info';
-                        } 
-                        else {
-                            $loc = 'no coor';
-                        }
-                        // if(isset($lat) && isset($long)) {
-                        //     $apiKey = getenv('SERP_MAP_API');
-                        //     $url = "https://serpapi.com/search.json?engine=google_maps_reverse&lat=$lat&lng=$long&api_key=$apiKey";
-                        //     $response = file_get_contents($url);
-                        //     $data = json_decode($response, true);
-
-                        //     $loc = isset($data['local_results']['address']) ?  $data['local_results']['address'] : 'Unknown location';
-
-                        //     echo  (string)$loc;
-                        // }
-                    ?>
-                    <tr>
-                        <td><?= htmlspecialchars($u['_id']) ?></td>
-                        <td><?= htmlspecialchars(isset($u['identity']['full_name']) ? $u['identity']['full_name'] : '') ?></td>
-                        <td><?= htmlspecialchars(isset($u['identity']['email']) ? $u['identity']['email'] :  '') ?></td>
-                        <td><?= htmlspecialchars(isset($u['profile']['age']) ?  $u['profile']['age'] : '') ?> </td>
-                        <td><?= htmlspecialchars(isset($u['profile']['occupation']) ?  $u['profile']['occupation'] :'')?></td>
-                        <td><?= htmlspecialchars($loc) ?> </td>
-                        <td><?= !empty($u['engagement']['verified']['status']) ? 'Yes' : 'No' ?> </td>
-                        <td><?= !empty($u['engagement']['pdf_click']['clicked']) ? 'Yes' : 'No' ?> </td>
-                        <td><?= !empty($u['engagement']['pdf_click']['clicked']) ? 'Yes' : 'No' ?> </td>
-                        <td><?= !empty($u['audit']['created_at']) ? $u['audit']['created_at'] : 'Failed to fetch created_at time' ?> </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+            <div id="dashboard">
+                <div id="users"
+                    data-role = "grid"
+                    data-bind="source: users"
+                    data-filterable='{"mode":"row"}'
+                    data-columns='[
+                    { "field": "_id", "hidden": true },
+                    { field: "name", title: "Họ tên" },
+                    { field: "email", title: "Email" },
+                    { field: "gender", title: "Giới tính"},
+                    { field: "age", title: "Ngày sinh"},
+                    { field: "job", title: "Nghề nghiệp"},
+                    { field: "location", title: "Tọa độ"},
+                    { field: "read_verify", title: "Đã xem verify mail  "},
+                    { field: "verify", title: "Đã verify"},
+                    { field: "download_pdf", title: "Đã tải pdf"},
+                ]'
+                    data-pageable="true"
+                    data-scrollable="true">
+                </div>
+            </div>
     </body>
     <script>
+        var usersData = <?php 
+        $rows = [];
+        foreach($user as $u){
+            //Convert coor array to string
+            $coords = isset($u['location']['coords']['coordinates']) ? $u['location']['coords']['coordinates'] : null;
+            if ($coords !== null) {
+                $long = isset($coords[1]) ? $coords[1]: '';
+                $lat  = isset($coords[0]) ? $coords[0]: '';
+                $loc = $lat !== '' && $long !== '' ? $lat . ', ' . $long : 'not enough coor info';
+            } 
+            else {
+                $loc = 'no coor';
+            }
+            $rows[] = [
+                '_id'               => isset($u['_id']) ? $u['_id'] : '',
+                'name'             => isset($u['identity']['full_name']) ? $u['identity']['full_name'] : '',
+                'email'            => isset($u['identity']['email']) ? $u['identity']['email'] : '',
+                'gender'           => isset($u['profile']['gender']) ? $u['profile']['gender'] :'',
+                'age'              => isset($u['profile']['age']) ? $u['profile']['age'] : null,
+                'job'              => isset($u['profile']['occupation']) ? $u['profile']['occupation'] : '',
+                'location'         => $loc,
+                'read_verify'         => isset($u['engagement']['email_open']['verify']) ? (bool)$u['engagement']['email_open']['verify'] : false,
+                //'read_verify_date'      => isset($u['engagement']['email_open']['verify_opened_time']) ? $u['engagement']['email_open']['verify_opened_time'] : 'Not yet',
+                'verify'      => isset($u['engagement']['verified']['status']) ? (bool)$u['engagement']['verified']['status'] : false,
+                'download_pdf' => isset($u['engagement']['pdf_click']['clicked']) ? (bool)$u['engagement']['pdf_click']['clicked'] : false,  
+                //'created_at'       => isset($u['audit']['created_at']) ? $u['audit']['created_at'] : 'Failed to fetch created_at time',
+            ];
+        }
+        $output = json_encode($rows, JSON_UNESCAPED_UNICODE);
+        log_message('info','Output row: '. $output);
+        echo $output;
+        ?>
+        
+        var viewModel = kendo.observable({
+            users : new kendo.data.DataSource({
+                    data: usersData,
+                    schema:{
+                        model: {
+                            fields: {
+                                read_verify:      { type: "boolean" },
+                                read_verify_date: { type: "date" },
+                                verify:           { type: "boolean" },
+                                download_pdf:     { type: "boolean" }
+                            }
+                        },
+                    },
+                pageSize: 25
+            })
+        });
+        kendo.bind($("#dashboard"), viewModel);
         $("#logoutBtn").kendoButton();
         
         $("#notify").kendoNotification({
@@ -129,6 +135,26 @@
         $("#send-reminder").on("submit", function (e) {
             //Stop redirecting 
             e.preventDefault();
+
+            var grid = $("#users").data("kendoGrid");
+            if (!grid) {
+                console.error("Grid instance not found");
+                return;
+            }
+            
+
+            var dataSource = grid.dataSource;
+            var allData = dataSource.data(); // all loaded data
+            var filters = dataSource.filter(); // current filter config
+
+            //Apply filters manually
+            var query = new kendo.data.Query(allData);
+            var filteredData = query.filter(filters).data;
+
+            var result = filteredData.map(item => item.toJSON());
+            document.getElementById("filter").value = JSON.stringify(result);
+
+            console.log("Posting users:", result.length, result);
 
             //Use Jquery AJAX's helper .post() to send form data to the server
             $.post(this.action, $(this).serialize())  //Take form action, turn them to key-val format
@@ -152,14 +178,6 @@
             });
         });
 
-        var ddl = $("#selection").kendoDropDownList({
-            optionLabel: "— Chọn bộ lọc —",         
-            animation: {                                 
-            open:  { effects: "fadeIn"  },
-            close: { effects: "fadeOut" }
-            }
-        }).data("kendoDropDownList");
-        ddl.value("<?= $active ?>");
     </script>
         
 

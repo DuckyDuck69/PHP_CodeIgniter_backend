@@ -15,7 +15,7 @@ class Admin extends CI_Controller {
         $this->load->model("user_model");
         $this->load->library('mailer');
         $this->load->library('queue', ['host' => '127.0.0.1', 'port' => 11300]); 
-
+        $this->load->helper('json_type_checker');
     }
     public function dashboard() {
         //Check if the current session belongs to an admin
@@ -50,7 +50,7 @@ class Admin extends CI_Controller {
         }
 
         //Get the option from the dashboard dropdown
-        $selected = (string) $this->input->post('selectedOption', true);
+        $selected = (string) $this->input->post('selectedOption', false);
         $allowed  = ['none', 'email_verified', 'email_not_verified', 'pdf_clicked', 'pdf_not_clicked'];
         if (!in_array($selected, $allowed, true)) { //Handle edge cases
             $selected = 'none';
@@ -77,24 +77,28 @@ class Admin extends CI_Controller {
         }
 
         ///Extract the ids from the filters again to build the email
-        $filter_key = (string)$this->input->post('filter', true);
-        $criteria   = $this->buildCriteria($filter_key); 
-
-        $users = $this->user_model->retrieve_user($criteria);
+        $type = (string)$this->input->post('selection', true);
+        log_message('debug', 'Type ='.$type);
+        $input   = $this->input->post('filtered_user', false);
+        log_message('debug', 'Input ='.$input);
+        $users = json_decode($input, true, 512);        
+        log_message('info','Is valid JSON: '. json_encode($users));
         //Keep track of how many ppl we send
         $sent = 0;
         //Send out a pdf file or an email reminder based on each condition
-        foreach ($users as $user) {
-            $id         = isset($user['_id']) ? (string)$user['_id'] : '';
-            $user_name  = isset($user['identity']['full_name']) ? (string)$user['identity']['full_name']: '';
-            $user_email = isset($user['identity']['email']) ? (string)$user['identity']['email'] : '';
-            if($filter_key === 'email_not_verified'){
+        foreach ($users as $u) {
+            $id         = isset($u['_id']['$oid']) ? $u['_id']['$oid'] : '';
+            log_message('info','Plain id: '. $id);
+            $user = $this->user_model->get_user($id);
+            $user_name  = isset($user['identity']['full_name']) ? $user['identity']['full_name']: '';
+            $user_email = isset($user['identity']['email']) ? $user['identity']['email'] : '';
+            if($type === 'verify'){
                 $user_token = $user['engagement']['verified']['token_hash'];
                 $verify_url = site_url('verify/email'). '?id='. $id . '&token=' . $user_token;
                 $subject = 'ST Group: Xac nhan tai khoan';
                 $body = 'Xin chào '.$user_name.'<br><br>Xin vui lòng bấm vào đường link này để xác nhận: '
                     . '<a href="'.$verify_url.'">Kích hoạt tài khoản</a>';                       
-            }else if ($filter_key === 'pdf_not_clicked'){
+            }else if ($type === 'file'){
                 $subject = 'ST Group: Gui Tep ';
                 $img_url = 'http://localhost:8081/training_homework/index.php/track/user_opened?id=' . $id;
                 $pdf_url = 'http://localhost:8081/training_homework/index.php/track/pdf?id=' . $id;
