@@ -1,0 +1,21 @@
+# Ignore vendor-like frontend libraries
+*.css linguist-vendored
+*.js linguist-vendored
+*.map linguist-vendored
+
+# Ignore assets (images, fonts, etc.)
+*.png linguist-vendored
+*.jpg linguist-vendored
+*.jpeg linguist-vendored
+*.gif linguist-vendored
+*.svg linguist-vendored
+*.ico linguist-vendored
+*.woff linguist-vendored
+*.woff2 linguist-vendored
+*.ttf linguist-vendored
+
+# Ignore HTML templates (so stats show PHP backend)
+*.html linguist-vendored
+
+# Force recognition for PHP
+*.php linguist-language=PHP
