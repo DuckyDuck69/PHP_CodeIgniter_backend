@@ -108,8 +108,8 @@ class Admin extends CI_Controller {
                 
             }else if ($type === 'file'){
                 $subject = 'ST Group: Gui Tep ';
-                $img_url = 'http://localhost:8081/training_homework/index.php/track/user_opened?id=' . $id;
-                $pdf_url = 'http://localhost:8081/training_homework/index.php/track/pdf?id=' . $id;
+                $img_url = site_url('track/user_opened').'?id=' . $id;
+                $pdf_url = site_url('track/pdf').'?id=' . $id;
                 $body = 'Xin chào '.$user_name
                             .'<br><br>Đây là tệp đính kèm của bạn: ' 
                             .'<a href="'.$pdf_url.'">Tải pdf của bạn</a>'

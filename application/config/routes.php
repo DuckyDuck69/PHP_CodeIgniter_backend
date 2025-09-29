@@ -71,6 +71,7 @@ $route['form_submit']  = 'forms/submit';
 $route['forms/submit']  = 'forms/submit'; 
 
 $route['track/pdf'] = 'track/pdf';
+$route['track/user_opened'] = 'track/user_opened';
 
 $route['404_override'] = '';
 
