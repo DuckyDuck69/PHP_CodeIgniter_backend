@@ -41,7 +41,7 @@
                         <option value="file">Thư tài liệu</option>
                     </select>
                 <input type="hidden" id="filter" name="filtered_user">
-                <button type="submit">Send Reminder</button>
+                <button type="submit" class="k-button k-button-flat">Send Reminder</button>
             </form>
 
             <form action="<?= site_url('home_page')?>">
@@ -144,10 +144,9 @@
             
 
             var dataSource = grid.dataSource;
-            var allData = dataSource.data(); // all loaded data
-            var filters = dataSource.filter(); // current filter config
-
-            //Apply filters manually
+            var allData = dataSource.data(); //All loaded data on the grid 
+            var filters = dataSource.filter(); //Get the current filter setting 
+            //Apply filters
             var query = new kendo.data.Query(allData);
             var filteredData = query.filter(filters).data;
 
@@ -158,8 +157,25 @@
 
             //Use Jquery AJAX's helper .post() to send form data to the server
             $.post(this.action, $(this).serialize())  //Take form action, turn them to key-val format
-                .done(res => showMsg("Đã gửi email nhắc nhở cho " + (res.sent || 0) + " người.", "success"))
-                .fail(() => showMsg("Gửi nhắc nhở thất bại.", "error"));
+                .done(res => {
+                    const sent = res.sent || 0;
+                    const failed = res.send_fail || 0;
+                    console.log("Sent: ", sent);
+                    console.log("Failed: ", failed);
+                    if (failed > 0 && sent === 0) {
+                        showMsg(`Gửi nhắc nhở thất bại cho ${failed} người.`, `error`);
+                    } else if (failed > 0) {
+                        showMsg(`Đã gửi cho ${sent} người; thất bại ${failed}.`, `warning`);
+                    } else {
+                        showMsg(`Đã gửi email nhắc nhở cho ${sent} người.`, `success`);
+                    }
+                })
+                .fail((jqXHR, textStatus, errorThrown) => {
+                    console.error("Status code:", jqXHR.status);         // e.g. 404, 500, 200 
+                    console.error("Status text:", textStatus);           // "timeout", "error", "abort", "parsererror"
+                    console.error("Error thrown:", errorThrown);         // e.g. "Internal Server Error"
+                    console.error("Raw response:", jqXHR.responseText);  // server’s raw HTML/JSON
+                });
             });
 
         function showMsg(msg, type){

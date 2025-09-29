@@ -85,19 +85,27 @@ class Admin extends CI_Controller {
         log_message('info','Is valid JSON: '. json_encode($users));
         //Keep track of how many ppl we send
         $sent = 0;
+        $send_fail = 0;
         //Send out a pdf file or an email reminder based on each condition
         foreach ($users as $u) {
-            $id         = isset($u['_id']['$oid']) ? $u['_id']['$oid'] : '';
+            $id = isset($u['_id']['$oid']) ? $u['_id']['$oid'] : '';
             log_message('info','Plain id: '. $id);
             $user = $this->user_model->get_user($id);
             $user_name  = isset($user['identity']['full_name']) ? $user['identity']['full_name']: '';
             $user_email = isset($user['identity']['email']) ? $user['identity']['email'] : '';
             if($type === 'verify'){
-                $user_token = $user['engagement']['verified']['token_hash'];
+                $user_token = isset($user['engagement']['verified']['token_hash']) ? $user['engagement']['verified']['token_hash'] : '';
+                if(empty($user_token)){
+                    $send_fail++;
+                    continue;
+                }
                 $verify_url = site_url('verify/email'). '?id='. $id . '&token=' . $user_token;
                 $subject = 'ST Group: Xac nhan tai khoan';
                 $body = 'Xin chào '.$user_name.'<br><br>Xin vui lòng bấm vào đường link này để xác nhận: '
-                    . '<a href="'.$verify_url.'">Kích hoạt tài khoản</a>';                       
+                    . '<a href="'.$verify_url.'">Kích hoạt tài khoản</a>';                    
+            
+                
+                
             }else if ($type === 'file'){
                 $subject = 'ST Group: Gui Tep ';
                 $img_url = 'http://localhost:8081/training_homework/index.php/track/user_opened?id=' . $id;
@@ -125,11 +133,13 @@ class Admin extends CI_Controller {
             $sent++;  
         }
         $this->output
+            ->set_status_header(200)    
             ->set_content_type('application/json')
             ->set_output(json_encode([
                 'ok' => true,
                 'message' => 'Queued reminders successfully.',
-                'sent' => $sent
+                'sent' => $sent,
+                'send_fail' => $send_fail,
             ]));
     }
 
